@@ -218,30 +218,62 @@ end)
 
 Players.PlayerRemoving:Connect(RemoveESP)
 
--- // GUN MODS (ANTI-LAG 2.0) //
+-- // LOGIC: GUN MODS (Optimized V3 - HitReg Fix) //
 task.spawn(function()
+    local RS = game:GetService("ReplicatedStorage")
+    local wkspc = RS:WaitForChild("wkspc", 10)
+    local Weapons = RS:WaitForChild("Weapons", 10)
+
     while true do
         if Config.Gun.InfAmmo or Config.Gun.FastFire or Config.Gun.NoRecoil then
             pcall(function()
-                if Config.Gun.InfAmmo then
-                    local curse = game.ReplicatedStorage:FindFirstChild("wkspc") and game.ReplicatedStorage.wkspc:FindFirstChild("CurrentCurse")
-                    if curse then curse.Value = "Infinite Ammo" end
-                end
-                
-                for _, v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
-                    if Config.Gun.FastFire and v:FindFirstChild("FireRate") then 
-                        v.FireRate.Value = 0.02 
+                -- 1. Infinite Ammo
+                if Config.Gun.InfAmmo and wkspc and wkspc:FindFirstChild("CurrentCurse") then
+                    if wkspc.CurrentCurse.Value ~= "Infinite Ammo" then
+                        wkspc.CurrentCurse.Value = "Infinite Ammo"
                     end
-                    if Config.Gun.NoRecoil then
-                        if v:FindFirstChild("RecoilControl") then v.RecoilControl.Value = 0 end
-                        if v:FindFirstChild("Recoil") then v.Recoil.Value = 0 end
+                end
+
+                -- 2. Weapon Modifications
+                if Weapons then
+                    for _, v in ipairs(Weapons:GetChildren()) do
+                        -- Fast Fire (Safe Mode: 0.04s)
+                        -- Unter 0.04 registriert der Server Schüsse oft nicht (Lag/No Connect)
+                        if Config.Gun.FastFire then
+                            local fr = v:FindFirstChild("FireRate")
+                            if fr and fr.Value > 0.04 then 
+                                fr.Value = 0.04 
+                            end
+                            
+                            
+                            local auto = v:FindFirstChild("Auto")
+                            if auto and auto.Value == false then
+                                auto.Value = true
+                            end
+                        end
+
+                        -- No Recoil & No Spread
+                        if Config.Gun.NoRecoil then
+                            local rc = v:FindFirstChild("RecoilControl")
+                            local rec = v:FindFirstChild("Recoil")
+                            local sp = v:FindFirstChild("Spread")
+                            local msp = v:FindFirstChild("MaxSpread")
+
+                            
+                            if rc and rc.Value ~= 0 then rc.Value = 0 end
+                            if rec and rec.Value ~= 0 then rec.Value = 0 end
+                            if sp and sp.Value ~= 0 then sp.Value = 0 end
+                            if msp and msp.Value ~= 0 then msp.Value = 0 end
+                        end
                     end
                 end
             end)
         end
-        task.wait(2) -- Loop läuft nur alle 2 Sekunden -> 0% CPU Last
+        
+        task.wait(1.5) 
     end
 end)
+
 
 -- // JOYSTICK FLY //
 local flyBV, flyBG
