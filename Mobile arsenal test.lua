@@ -1,8 +1,14 @@
 --[[ 
-    OffenseWare Mobile | Arsenal "Legit-Blatant"
-    ESP: Custom Mobile Optimized
-    Aimbot: Closest to Mouse + Wallcheck
+    OffenseWare Mobile | Arsenal "Legit-Blatant" V9.6
+    Updates:
+    - Notification on Load (UI or System)
+    - Gun Mods: V3 (No Lag, HitReg Fix)
+    - ESP: BillboardGui (No Lag)
+    - Aimbot: Wallcheck + Nearest
 ]]
+
+-- Debug Print start
+print("OffenseWare: Starting...")
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -12,8 +18,21 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- // 1. LIBRARY LADEN //
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/OffenseWare-OF/OffenseWare-lib/main/OffenseWare.lua"))()
-local Window = Library:CreateWindow("OffenseWare | V9.0")
+local success, Library = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/OffenseWare-OF/OffenseWare-lib/main/OffenseWare.lua"))()
+end)
+
+if not success or not Library then
+    -- Fallback Notification falls Library crasht
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "OffenseWare Error";
+        Text = "Library failed to load!";
+        Duration = 5;
+    })
+    return
+end
+
+local Window = Library:CreateWindow("OffenseWare | V9.6")
 
 local CombatTab = Window:CreateTab("Combat")
 local VisualTab = Window:CreateTab("Visuals")
@@ -33,8 +52,7 @@ local Config = {
     ESP = {
         Enabled = false,
         Boxes = true,
-        Names = false,
-        Health = false
+        Names = false
     },
     Gun = {
         InfAmmo = false,
@@ -90,7 +108,6 @@ local function GetClosestTargetInFOV()
     local fovRad = Config.Aimbot.FOV
 
     for _, v in ipairs(Players:GetPlayers()) do
-        -- STRICT ENEMY CHECK
         if v ~= LocalPlayer and IsEnemy(v) then
             local char = v.Character
             if char and char:FindFirstChild(Config.Aimbot.Part) and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
@@ -99,11 +116,9 @@ local function GetClosestTargetInFOV()
                 local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
                 
                 if onScreen then
-                    -- Distanz zum Fadenkreuz (Nearest in FOV)
                     local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
                     
                     if dist < shortestDist and dist <= fovRad then
-                        -- WallCheck
                         if IsVisible(part) then
                             closest = part
                             shortestDist = dist
@@ -126,7 +141,6 @@ RunService.RenderStepped:Connect(function()
         if targetPart then
             local current = Camera.CFrame
             local goal = CFrame.new(current.Position, targetPart.Position)
-            -- Smoothing anwenden
             Camera.CFrame = current:Lerp(goal, Config.Aimbot.Smoothing)
         end
     end
@@ -140,7 +154,7 @@ local function CreateESP(plr)
     
     local Box = Instance.new("BillboardGui")
     Box.Name = "OW_ESP"
-    Box.AlwaysOnTop = true -- Kein Wallcheck für ESP (sehen durch Wände)
+    Box.AlwaysOnTop = true
     Box.Size = UDim2.new(4, 0, 5.5, 0)
     Box.StudsOffset = Vector3.new(0, 0, 0)
     Box.Adornee = nil
@@ -178,7 +192,7 @@ end
 
 local function RemoveESP(plr)
     if ESP_Storage[plr] then
-        ESP_Storage[plr].Main:Destroy()
+        if ESP_Storage[plr].Main then ESP_Storage[plr].Main:Destroy() end
         ESP_Storage[plr] = nil
     end
 end
@@ -187,23 +201,18 @@ RunService.RenderStepped:Connect(function()
     if Config.ESP.Enabled then
         for _, plr in pairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer then
-                -- ENEMY CHECK: Wenn Teammate, ESP entfernen/nicht erstellen
                 if not IsEnemy(plr) then
                     RemoveESP(plr)
                 else
-                    if not ESP_Storage[plr] then
-                        CreateESP(plr)
-                    end
+                    if not ESP_Storage[plr] then CreateESP(plr) end
                     
                     local esp = ESP_Storage[plr]
-                    if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
+                    if esp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
                         esp.Main.Parent = game.CoreGui
                         esp.Main.Adornee = plr.Character.HumanoidRootPart
-                        
-                        -- Config Update
                         esp.Stroke.Enabled = Config.ESP.Boxes
                         esp.Name.Visible = Config.ESP.Names
-                    else
+                    elseif esp then
                         esp.Main.Parent = nil
                     end
                 end
@@ -211,14 +220,14 @@ RunService.RenderStepped:Connect(function()
         end
     else
         for _, v in pairs(ESP_Storage) do
-            v.Main.Parent = nil
+            if v and v.Main then v.Main.Parent = nil end
         end
     end
 end)
 
 Players.PlayerRemoving:Connect(RemoveESP)
 
--- // LOGIC: GUN MODS (Optimized V3 - HitReg Fix) //
+-- // GUN MODS (Optimized V3 - HitReg Fix) //
 task.spawn(function()
     local RS = game:GetService("ReplicatedStorage")
     local wkspc = RS:WaitForChild("wkspc", 10)
@@ -227,39 +236,35 @@ task.spawn(function()
     while true do
         if Config.Gun.InfAmmo or Config.Gun.FastFire or Config.Gun.NoRecoil then
             pcall(function()
-                -- 1. Infinite Ammo
+                -- Infinite Ammo
                 if Config.Gun.InfAmmo and wkspc and wkspc:FindFirstChild("CurrentCurse") then
                     if wkspc.CurrentCurse.Value ~= "Infinite Ammo" then
                         wkspc.CurrentCurse.Value = "Infinite Ammo"
                     end
                 end
 
-                -- 2. Weapon Modifications
+                -- Weapon Mods
                 if Weapons then
                     for _, v in ipairs(Weapons:GetChildren()) do
                         -- Fast Fire (Safe Mode: 0.04s)
-                        -- Unter 0.04 registriert der Server Schüsse oft nicht (Lag/No Connect)
                         if Config.Gun.FastFire then
                             local fr = v:FindFirstChild("FireRate")
                             if fr and fr.Value > 0.04 then 
                                 fr.Value = 0.04 
                             end
-                            
-                            
                             local auto = v:FindFirstChild("Auto")
                             if auto and auto.Value == false then
                                 auto.Value = true
                             end
                         end
 
-                        -- No Recoil & No Spread
+                        -- No Recoil (Check != 0 to save CPU)
                         if Config.Gun.NoRecoil then
                             local rc = v:FindFirstChild("RecoilControl")
                             local rec = v:FindFirstChild("Recoil")
                             local sp = v:FindFirstChild("Spread")
                             local msp = v:FindFirstChild("MaxSpread")
 
-                            
                             if rc and rc.Value ~= 0 then rc.Value = 0 end
                             if rec and rec.Value ~= 0 then rec.Value = 0 end
                             if sp and sp.Value ~= 0 then sp.Value = 0 end
@@ -269,11 +274,9 @@ task.spawn(function()
                 end
             end)
         end
-        
         task.wait(1.5) 
     end
 end)
-
 
 -- // JOYSTICK FLY //
 local flyBV, flyBG
@@ -289,7 +292,9 @@ local function ToggleFly(state)
     else
         if flyBV then flyBV:Destroy() end
         if flyBG then flyBG:Destroy() end
-        if LocalPlayer.Character then LocalPlayer.Character.Humanoid.PlatformStand = false end
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.PlatformStand = false
+        end
     end
 end
 
@@ -337,8 +342,20 @@ SettingsTab:Section("Config")
 SettingsTab:CreateButton("Unload & Cleanup", function()
     Config.Aimbot.Enabled = false
     Config.ESP.Enabled = false
+    Config.Gun.InfAmmo = false
     ToggleFly(false)
     FOVCircle:Remove()
-    for _, v in pairs(ESP_Storage) do v.Main:Destroy() end
+    for _, v in pairs(ESP_Storage) do if v.Main then v.Main:Destroy() end end
     game.CoreGui:FindFirstChild("OffenseWareLib"):Destroy()
 end)
+
+-- // NOTIFICATION SYSTEM //
+if Library.Notify then
+    Library:Notify("OffenseWare", "Loaded Successfully!", 3)
+else
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "OffenseWare";
+        Text = "Loaded Successfully!";
+        Duration = 3;
+    })
+end
