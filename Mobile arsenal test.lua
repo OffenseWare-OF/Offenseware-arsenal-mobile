@@ -1,5 +1,5 @@
 --[[ 
-    OffenseWare Mobile | Arsenal "Legit-Blatant" V9.6
+    OffenseWare Mobile | Arsenal "Legit-Blatant" V1
     Updates:
     - Notification on Load (UI or System)
     - Gun Mods: V3 (No Lag, HitReg Fix)
