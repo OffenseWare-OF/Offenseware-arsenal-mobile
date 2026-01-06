@@ -1,7 +1,6 @@
 --[[ 
     OffenseWare Mobile | Arsenal "Legit-Blatant"
-    Optimized by Gemini
-    ESP: Custom Mobile Optimized (Only Enemies)
+    ESP: Custom Mobile Optimized
     Aimbot: Closest to Mouse + Wallcheck
 ]]
 
@@ -134,7 +133,6 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- // ESP LOGIC (MOBILE OPTIMIZED BILLBOARD) //
--- Wir nutzen BillboardGuis statt Highlights oder Drawings, da diese NIEMALS laggen und 100% funktionieren.
 local ESP_Storage = {}
 
 local function CreateESP(plr)
@@ -230,7 +228,6 @@ task.spawn(function()
                     if curse then curse.Value = "Infinite Ammo" end
                 end
                 
-                -- Nur Waffen im Storage bearbeiten (Lag-Fix)
                 for _, v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
                     if Config.Gun.FastFire and v:FindFirstChild("FireRate") then 
                         v.FireRate.Value = 0.02 
