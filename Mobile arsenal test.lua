@@ -34,12 +34,12 @@ local Config = {
         Enabled = false,
         FOV = 120,
         Smoothing = 0.5,
-        WallCheck = true,
+        WallCheck = false,
         Part = "Head"
     },
     ESP = {
         Enabled = false,
-        Boxes = true,
+        Boxes = false,
         Names = false
     },
     Gun = {
