@@ -1,13 +1,3 @@
---[[ 
-    OffenseWare Mobile | Arsenal "Legit-Blatant" V1
-    Updates:
-    - Notification on Load (UI or System)
-    - Gun Mods: V3 (No Lag, HitReg Fix)
-    - ESP: BillboardGui (No Lag)
-    - Aimbot: Wallcheck + Nearest
-]]
-
--- Debug Print start
 print("OffenseWare: Starting...")
 
 local Players = game:GetService("Players")
@@ -17,7 +7,6 @@ local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- // 1. LIBRARY LADEN //
 local success, Library = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/OffenseWare-OF/OffenseWare-lib/main/OffenseWare.lua"))()
 end)
@@ -40,7 +29,6 @@ local GunTab = Window:CreateTab("Gun Mods")
 local MoveTab = Window:CreateTab("Movement")
 local SettingsTab = Window:CreateTab("Settings")
 
--- // CONFIG //
 local Config = {
     Aimbot = {
         Enabled = false,
@@ -65,7 +53,6 @@ local Config = {
     }
 }
 
--- // UTILS: WALLCHECK //
 local function IsVisible(targetPart)
     if not Config.Aimbot.WallCheck then return true end
     
@@ -87,13 +74,11 @@ local function IsVisible(targetPart)
     return true
 end
 
--- // UTILS: TEAM CHECK //
 local function IsEnemy(player)
     if not player or not player.Team then return true end -- Falls FFA
     return player.Team ~= LocalPlayer.Team
 end
 
--- // AIMBOT LOGIC //
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Visible = false
 FOVCircle.Color = Color3.fromRGB(170, 60, 255)
@@ -146,7 +131,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- // ESP LOGIC (MOBILE OPTIMIZED BILLBOARD) //
 local ESP_Storage = {}
 
 local function CreateESP(plr)
@@ -227,7 +211,6 @@ end)
 
 Players.PlayerRemoving:Connect(RemoveESP)
 
--- // GUN MODS (Optimized V3 - HitReg Fix) //
 task.spawn(function()
     local RS = game:GetService("ReplicatedStorage")
     local wkspc = RS:WaitForChild("wkspc", 10)
@@ -243,7 +226,6 @@ task.spawn(function()
                     end
                 end
 
-                -- Weapon Mods
                 if Weapons then
                     for _, v in ipairs(Weapons:GetChildren()) do
                         -- Fast Fire (Safe Mode: 0.04s)
@@ -258,7 +240,6 @@ task.spawn(function()
                             end
                         end
 
-                        -- No Recoil (Check != 0 to save CPU)
                         if Config.Gun.NoRecoil then
                             local rc = v:FindFirstChild("RecoilControl")
                             local rec = v:FindFirstChild("Recoil")
@@ -278,7 +259,6 @@ task.spawn(function()
     end
 end)
 
--- // JOYSTICK FLY //
 local flyBV, flyBG
 local function ToggleFly(state)
     if state then
@@ -308,28 +288,23 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- // UI SETUP //
 
--- COMBAT TAB
 CombatTab:Section("Legit Aimbot")
 CombatTab:CreateToggle("Enable Aimbot", false, function(v) Config.Aimbot.Enabled = v end)
 CombatTab:CreateToggle("Wall Check", true, function(v) Config.Aimbot.WallCheck = v end)
 CombatTab:CreateSlider("FOV Radius", 10, 400, 120, function(v) Config.Aimbot.FOV = v end)
 CombatTab:CreateSlider("Smoothing", 1, 100, 50, function(v) Config.Aimbot.Smoothing = v/100 end)
 
--- VISUAL TAB
 VisualTab:Section("ESP (Enemies Only)")
 VisualTab:CreateToggle("Enable ESP", false, function(v) Config.ESP.Enabled = v end)
 VisualTab:CreateToggle("Boxes", true, function(v) Config.ESP.Boxes = v end)
 VisualTab:CreateToggle("Names", false, function(v) Config.ESP.Names = v end)
 
--- GUN TAB
 GunTab:Section("Blatant")
 GunTab:CreateToggle("Infinite Ammo", false, function(v) Config.Gun.InfAmmo = v end)
 GunTab:CreateToggle("Fast Fire", false, function(v) Config.Gun.FastFire = v end)
 GunTab:CreateToggle("No Recoil", false, function(v) Config.Gun.NoRecoil = v end)
 
--- MOVE TAB
 MoveTab:Section("Movement")
 MoveTab:CreateToggle("Joystick Fly", false, function(v) 
     Config.Fly.Enabled = v
@@ -337,7 +312,6 @@ MoveTab:CreateToggle("Joystick Fly", false, function(v)
 end)
 MoveTab:CreateSlider("Fly Speed", 10, 200, 50, function(v) Config.Fly.Speed = v end)
 
--- SETTINGS
 SettingsTab:Section("Config")
 SettingsTab:CreateButton("Unload & Cleanup", function()
     Config.Aimbot.Enabled = false
@@ -349,7 +323,6 @@ SettingsTab:CreateButton("Unload & Cleanup", function()
     game.CoreGui:FindFirstChild("OffenseWareLib"):Destroy()
 end)
 
--- // NOTIFICATION SYSTEM //
 if Library.Notify then
     Library:Notify("OffenseWare", "Loaded Successfully!", 3)
 else
